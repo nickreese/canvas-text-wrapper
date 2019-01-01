@@ -1,17 +1,16 @@
-(function (root) {
-
+(function(root) {
   function CanvasTextWrapper(canvas, text, options) {
-    'use strict';
+    "use strict";
 
     var defaults = {
-      font: '18px Arial, sans-serif',
+      font: "18px Arial, sans-serif",
       sizeToFill: false,
       maxFontSizeToFill: false,
       lineHeight: 1,
       allowNewLine: true,
-      lineBreak: 'auto',
-      textAlign: 'left',
-      verticalAlign: 'top',
+      lineBreak: "auto",
+      textAlign: "left",
+      verticalAlign: "top",
       justifyLines: false,
       paddingX: 0,
       paddingY: 0,
@@ -21,7 +20,9 @@
       fitParent: false,
       strokeText: false,
       renderHDPI: true,
-      textDecoration: 'none'
+      textDecoration: "none",
+      height: "auto",
+      width: "auto"
     };
 
     var opts = {};
@@ -30,12 +31,15 @@
       opts[key] = options.hasOwnProperty(key) ? options[key] : defaults[key];
     }
 
-    var context = canvas.getContext('2d');
+    var context = canvas.getContext("2d");
     context.font = opts.font;
-    context.textBaseline = 'bottom';
+    context.textBaseline = "bottom";
 
     var scale = 1;
-    var devicePixelRatio = (typeof global !== 'undefined') ? global.devicePixelRatio : root.devicePixelRatio;
+    var devicePixelRatio =
+      typeof global !== "undefined"
+        ? global.devicePixelRatio
+        : root.devicePixelRatio;
 
     if (opts.renderHDPI && devicePixelRatio > 1) {
       var tempCtx = {};
@@ -51,38 +55,51 @@
 
       canvas.width = canvasWidth * scale;
       canvas.height = canvasHeight * scale;
-      canvas.style.width = canvasWidth * scale * 0.5 + 'px';
-      canvas.style.height = canvasHeight * scale * 0.5 + 'px';
+
+      if (opts.width !== "auto") {
+        canvas.width = opts.width * scale;
+      }
+
+      if (opts.height !== "auto") {
+        canvas.height = opts.width * scale;
+      }
+
+      canvas.style.width = canvasWidth * scale * 0.5 + "px";
+      canvas.style.height = canvasHeight * scale * 0.5 + "px";
 
       // restore context settings
       for (var key in tempCtx) {
         try {
           context[key] = tempCtx[key];
-        } catch (e) {
-
-        }
+        } catch (e) {}
       }
 
       context.scale(scale, scale);
     }
 
-    var EL_WIDTH = (!opts.fitParent ? canvas.width : canvas.parentNode.clientWidth) / scale;
-    var EL_HEIGHT = (!opts.fitParent ? canvas.height : canvas.parentNode.clientHeight) / scale;
-    var MAX_TXT_WIDTH = EL_WIDTH - (opts.paddingX * 2) - (opts.offsetX);
-    var MAX_TXT_HEIGHT = EL_HEIGHT - (opts.paddingY * 2) - (opts.offsetY);
+    var EL_WIDTH =
+      (!opts.fitParent ? canvas.width : canvas.parentNode.clientWidth) / scale;
+    var EL_HEIGHT =
+      (!opts.fitParent ? canvas.height : canvas.parentNode.clientHeight) /
+      scale;
+    var MAX_TXT_WIDTH = EL_WIDTH - opts.paddingX * 2 - opts.offsetX;
+    var MAX_TXT_HEIGHT = EL_HEIGHT - opts.paddingY * 2 - opts.offsetY;
 
     if (opts.maxWidth > 0) {
-      MAX_TXT_WIDTH = ( MAX_TXT_WIDTH > opts.maxWidth ) ? opts.maxWidth : MAX_TXT_WIDTH;
+      MAX_TXT_WIDTH =
+        MAX_TXT_WIDTH > opts.maxWidth ? opts.maxWidth : MAX_TXT_WIDTH;
     }
 
-    var fontSize = opts.font.match(/\d+(px|em|%)/g) ? +opts.font.match(/\d+(px|em|%)/g)[0].match(/\d+/g) : 18;
+    var fontSize = opts.font.match(/\d+(px|em|%)/g)
+      ? +opts.font.match(/\d+(px|em|%)/g)[0].match(/\d+/g)
+      : 18;
     var textBlockHeight = 0;
     var lines = [];
     var newLineIndexes = [];
-    var textPos = {x: 0, y: 0};
+    var textPos = { x: 0, y: 0 };
     var lineHeight = 0;
     var fontParts;
-    var multiNewLineDelimiter = '\u200B';
+    var multiNewLineDelimiter = "\u200B";
 
     text = handleMultipleNewline(text);
     setFont(fontSize);
@@ -90,24 +107,27 @@
     validate();
     render();
 
-    function handleMultipleNewline (text) {
+    function handleMultipleNewline(text) {
       do {
-        text = text.replace(/\n\n/g, '\n' + multiNewLineDelimiter + '\n');
-      } while (text.indexOf('\n\n') > -1);
+        text = text.replace(/\n\n/g, "\n" + multiNewLineDelimiter + "\n");
+      } while (text.indexOf("\n\n") > -1);
       return text;
     }
 
     function setFont(fontSize) {
-      if (!fontParts) fontParts = (!opts.sizeToFill) ? opts.font.split(/\b\d+px\b/i) : context.font.split(/\b\d+px\b/i);
-      context.font = fontParts[0] + fontSize + 'px' + fontParts[1];
+      if (!fontParts)
+        fontParts = !opts.sizeToFill
+          ? opts.font.split(/\b\d+px\b/i)
+          : context.font.split(/\b\d+px\b/i);
+      context.font = fontParts[0] + fontSize + "px" + fontParts[1];
     }
 
     function setLineHeight() {
       if (!isNaN(opts.lineHeight)) {
         lineHeight = fontSize * opts.lineHeight;
-      } else if (opts.lineHeight.toString().indexOf('px') !== -1) {
+      } else if (opts.lineHeight.toString().indexOf("px") !== -1) {
         lineHeight = parseInt(opts.lineHeight);
-      } else if (opts.lineHeight.toString().indexOf('%') !== -1) {
+      } else if (opts.lineHeight.toString().indexOf("%") !== -1) {
         lineHeight = (parseInt(opts.lineHeight) / 100) * fontSize;
       }
     }
@@ -128,14 +148,17 @@
           } else {
             adjustFontSize(++newFontSize);
           }
-        } while (textBlockHeight < MAX_TXT_HEIGHT && (lines.join(' ').split(/\s+/).length == wordsCount));
+        } while (
+          textBlockHeight < MAX_TXT_HEIGHT &&
+          lines.join(" ").split(/\s+/).length == wordsCount
+        );
 
         adjustFontSize(--newFontSize);
       } else {
         wrap();
       }
 
-      if (opts.justifyLines && opts.lineBreak === 'auto') {
+      if (opts.justifyLines && opts.lineBreak === "auto") {
         justify();
       }
 
@@ -152,10 +175,10 @@
 
     function wrap() {
       if (opts.allowNewLine) {
-        var newLines = text.trim().split('\n');
+        var newLines = text.trim().split("\n");
         for (var i = 0, idx = 0; i < newLines.length - 1; i++) {
           idx += newLines[i].trim().split(/\s+/).length;
-          newLineIndexes.push(idx)
+          newLineIndexes.push(idx);
         }
       }
 
@@ -169,12 +192,17 @@
     function checkLength(words) {
       var testString, tokenLen, sliced, leftover;
 
-      words.forEach(function (word, index) {
-        testString = '';
+      words.forEach(function(word, index) {
+        testString = "";
         tokenLen = context.measureText(word).width;
 
         if (tokenLen > MAX_TXT_WIDTH) {
-          for (var k = 0; (context.measureText(testString + word[k]).width <= MAX_TXT_WIDTH) && (k < word.length); k++) {
+          for (
+            var k = 0;
+            context.measureText(testString + word[k]).width <= MAX_TXT_WIDTH &&
+            k < word.length;
+            k++
+          ) {
             testString += word[k];
           }
 
@@ -188,22 +216,24 @@
     function breakText(words) {
       lines = [];
       for (var i = 0, j = 0; i < words.length; j++) {
-        lines[j] = '';
+        lines[j] = "";
 
-        if (opts.lineBreak === 'auto') {
+        if (opts.lineBreak === "auto") {
           if (context.measureText(lines[j] + words[i]).width > MAX_TXT_WIDTH) {
             break;
           } else {
-            while ((context.measureText(lines[j] + words[i]).width <= MAX_TXT_WIDTH) && (i < words.length)) {
-
-              lines[j] += words[i] + ' ';
+            while (
+              context.measureText(lines[j] + words[i]).width <= MAX_TXT_WIDTH &&
+              i < words.length
+            ) {
+              lines[j] += words[i] + " ";
               i++;
 
               if (opts.allowNewLine) {
                 for (var k = 0; k < newLineIndexes.length; k++) {
                   if (newLineIndexes[k] === i) {
                     j++;
-                    lines[j] = '';
+                    lines[j] = "";
                     break;
                   }
                 }
@@ -231,25 +261,32 @@
 
       // fill lines with extra spaces
       var numWords, spaceLength, numOfSpaces, num, filler;
-      var delimiter = '\u200A';
+      var delimiter = "\u200A";
       for (i = 0; i < lines.length; i++) {
         if (i === longestLineIndex) continue;
 
         numWords = lines[i].trim().split(/\s+/).length;
         if (numWords <= 1) continue;
 
-        lines[i] = lines[i].trim().split(/\s+/).join(delimiter);
+        lines[i] = lines[i]
+          .trim()
+          .split(/\s+/)
+          .join(delimiter);
 
         spaceLength = context.measureText(delimiter).width;
-        numOfSpaces = (maxLen - context.measureText(lines[i]).width) / spaceLength;
+        numOfSpaces =
+          (maxLen - context.measureText(lines[i]).width) / spaceLength;
         num = numOfSpaces / (numWords - 1);
 
-        filler = '';
+        filler = "";
         for (var j = 0; j < num; j++) {
           filler += delimiter;
         }
 
-        lines[i] = lines[i].trim().split(delimiter).join(filler);
+        lines[i] = lines[i]
+          .trim()
+          .split(delimiter)
+          .join(filler);
       }
     }
 
@@ -257,10 +294,10 @@
       var width = context.measureText(text).width;
 
       switch (context.textAlign) {
-        case 'center':
-          x -= (width / 2);
+        case "center":
+          x -= width / 2;
           break;
-        case 'right':
+        case "right":
           x -= width;
           break;
       }
@@ -272,7 +309,7 @@
     }
 
     function drawText() {
-      var skipLineOnMatch = multiNewLineDelimiter + ' ';
+      var skipLineOnMatch = multiNewLineDelimiter + " ";
       for (var i = 0; i < lines.length; i++) {
         textPos.y = parseInt(textPos.y) + lineHeight;
         if (lines[i] !== skipLineOnMatch) {
@@ -282,7 +319,7 @@
             context.strokeText(lines[i], textPos.x, textPos.y);
           }
 
-          if (opts.textDecoration.toLocaleLowerCase() === 'underline') {
+          if (opts.textDecoration.toLocaleLowerCase() === "underline") {
             underline(lines[i], textPos.x, textPos.y);
           }
         }
@@ -292,9 +329,9 @@
     function setHorizAlign() {
       context.textAlign = opts.textAlign;
 
-      if (opts.textAlign == 'center') {
-        textPos.x = (EL_WIDTH  + opts.offsetX) / 2;
-      } else if (opts.textAlign == 'right') {
+      if (opts.textAlign == "center") {
+        textPos.x = (EL_WIDTH + opts.offsetX) / 2;
+      } else if (opts.textAlign == "right") {
         textPos.x = EL_WIDTH - opts.paddingX;
       } else {
         textPos.x = opts.paddingX + opts.offsetX;
@@ -302,9 +339,9 @@
     }
 
     function setVertAlign() {
-      if (opts.verticalAlign == 'middle') {
+      if (opts.verticalAlign == "middle") {
         textPos.y = (EL_HEIGHT - textBlockHeight + opts.offsetY) / 2;
-      } else if (opts.verticalAlign == 'bottom') {
+      } else if (opts.verticalAlign == "bottom") {
         textPos.y = EL_HEIGHT - textBlockHeight - opts.paddingY;
       } else {
         textPos.y = opts.paddingY + opts.offsetY;
@@ -312,22 +349,32 @@
     }
 
     function validate() {
-      if (typeof text !== 'string')
-        throw new TypeError('The second parameter must be a String.');
+      if (typeof text !== "string")
+        throw new TypeError("The second parameter must be a String.");
 
-      if (isNaN(fontSize))
-        throw new TypeError('Cannot parse "font".');
+      if (isNaN(fontSize)) throw new TypeError('Cannot parse "font".');
 
-      if (isNaN(lineHeight))
-        throw new TypeError('Cannot parse "lineHeight".');
+      if (isNaN(lineHeight)) throw new TypeError('Cannot parse "lineHeight".');
 
-      if (opts.textAlign.toLocaleLowerCase() !== 'left' && opts.textAlign.toLocaleLowerCase() !== 'center' && opts.textAlign.toLocaleLowerCase() !== 'right')
-        throw new TypeError('Property "textAlign" must be set to either "left", "center", or "right".');
+      if (
+        opts.textAlign.toLocaleLowerCase() !== "left" &&
+        opts.textAlign.toLocaleLowerCase() !== "center" &&
+        opts.textAlign.toLocaleLowerCase() !== "right"
+      )
+        throw new TypeError(
+          'Property "textAlign" must be set to either "left", "center", or "right".'
+        );
 
-      if (opts.verticalAlign.toLocaleLowerCase() !== 'top' && opts.verticalAlign.toLocaleLowerCase() !== 'middle' && opts.verticalAlign.toLocaleLowerCase() !== 'bottom')
-        throw new TypeError('Property "verticalAlign" must be set to either "top", "middle", or "bottom".');
+      if (
+        opts.verticalAlign.toLocaleLowerCase() !== "top" &&
+        opts.verticalAlign.toLocaleLowerCase() !== "middle" &&
+        opts.verticalAlign.toLocaleLowerCase() !== "bottom"
+      )
+        throw new TypeError(
+          'Property "verticalAlign" must be set to either "top", "middle", or "bottom".'
+        );
 
-      if (typeof opts.justifyLines !== 'boolean')
+      if (typeof opts.justifyLines !== "boolean")
         throw new TypeError('Property "justifyLines" must be a Boolean.');
 
       if (isNaN(opts.paddingX))
@@ -345,29 +392,49 @@
       if (isNaN(opts.maxWidth))
         throw new TypeError('Property "maxWidth" must be a Number.');
 
-      if (typeof opts.fitParent !== 'boolean')
+      if (typeof opts.fitParent !== "boolean")
         throw new TypeError('Property "fitParent" must be a Boolean.');
 
-      if (opts.lineBreak.toLocaleLowerCase() !== 'auto' && opts.lineBreak.toLocaleLowerCase() !== 'word')
-        throw new TypeError('Property "lineBreak" must be set to either "auto" or "word".');
+      if (
+        opts.lineBreak.toLocaleLowerCase() !== "auto" &&
+        opts.lineBreak.toLocaleLowerCase() !== "word"
+      )
+        throw new TypeError(
+          'Property "lineBreak" must be set to either "auto" or "word".'
+        );
 
-      if (typeof opts.sizeToFill !== 'boolean')
+      if (opts.width.toLocaleLowerCase() !== "auto" && !isNaN(opts.width))
+        throw new TypeError(
+          'Property "width" must be set to either "auto" or a number.'
+        );
+
+      if (opts.height.toLocaleLowerCase() !== "auto" && !isNaN(opts.height))
+        throw new TypeError(
+          'Property "height" must be set to either "auto" or a number.'
+        );
+
+      if (typeof opts.sizeToFill !== "boolean")
         throw new TypeError('Property "sizeToFill" must be a Boolean.');
 
-      if (typeof opts.strokeText !== 'boolean')
+      if (typeof opts.strokeText !== "boolean")
         throw new TypeError('Property "strokeText" must be a Boolean.');
 
-      if (typeof opts.renderHDPI !== 'boolean')
+      if (typeof opts.renderHDPI !== "boolean")
         throw new TypeError('Property "renderHDPI" must be a Boolean.');
 
-      if (opts.textDecoration.toLocaleLowerCase() !== 'none' && opts.textDecoration.toLocaleLowerCase() !== 'underline')
-        throw new TypeError('Property "textDecoration" must be set to either "none" or "underline".');
+      if (
+        opts.textDecoration.toLocaleLowerCase() !== "none" &&
+        opts.textDecoration.toLocaleLowerCase() !== "underline"
+      )
+        throw new TypeError(
+          'Property "textDecoration" must be set to either "none" or "underline".'
+        );
     }
 
-    return(lines);
+    return lines;
   }
 
-  if ('module' in root && 'exports' in module) {
+  if ("module" in root && "exports" in module) {
     module.exports = CanvasTextWrapper;
   } else {
     root.CanvasTextWrapper = CanvasTextWrapper;
