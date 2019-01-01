@@ -41,6 +41,9 @@
         ? global.devicePixelRatio
         : root.devicePixelRatio;
 
+    var canvasWidth = canvas.width;
+    var canvasHeight = canvas.height;
+
     if (opts.renderHDPI && devicePixelRatio > 1) {
       var tempCtx = {};
 
@@ -49,20 +52,10 @@
         tempCtx[key] = context[key];
       }
 
-      var canvasWidth = canvas.width;
-      var canvasHeight = canvas.height;
       scale = devicePixelRatio;
 
       canvas.width = canvasWidth * scale;
       canvas.height = canvasHeight * scale;
-
-      if (opts.width !== "auto") {
-        canvas.width = opts.width * scale;
-      }
-
-      if (opts.height !== "auto") {
-        canvas.height = opts.width * scale;
-      }
 
       canvas.style.width = canvasWidth * scale * 0.5 + "px";
       canvas.style.height = canvasHeight * scale * 0.5 + "px";
@@ -77,13 +70,28 @@
       context.scale(scale, scale);
     }
 
+    if (opts.width !== "auto") {
+      canvasWidth = opts.width;
+    }
+
+    if (opts.height !== "auto") {
+      canvasHeight = opts.height;
+    }
+
     var EL_WIDTH =
-      (!opts.fitParent ? canvas.width : canvas.parentNode.clientWidth) / scale;
+      (!opts.fitParent ? canvasWidth : canvas.parentNode.clientWidth) / scale;
     var EL_HEIGHT =
-      (!opts.fitParent ? canvas.height : canvas.parentNode.clientHeight) /
-      scale;
+      (!opts.fitParent ? canvasHeight : canvas.parentNode.clientHeight) / scale;
     var MAX_TXT_WIDTH = EL_WIDTH - opts.paddingX * 2 - opts.offsetX;
     var MAX_TXT_HEIGHT = EL_HEIGHT - opts.paddingY * 2 - opts.offsetY;
+
+    if (opts.width !== "auto") {
+      MAX_TXT_HEIGHT = opts.width - opts.paddingX * 2;
+    }
+
+    if (opts.height !== "auto") {
+      MAX_TXT_HEIGHT = opts.height - opts.paddingY * 2;
+    }
 
     if (opts.maxWidth > 0) {
       MAX_TXT_WIDTH =
@@ -330,7 +338,7 @@
       context.textAlign = opts.textAlign;
 
       if (opts.textAlign == "center") {
-        textPos.x = (EL_WIDTH + opts.offsetX) / 2;
+        textPos.x = (EL_WIDTH + opts.offsetX * 2) / 2;
       } else if (opts.textAlign == "right") {
         textPos.x = EL_WIDTH - opts.paddingX;
       } else {
@@ -403,12 +411,12 @@
           'Property "lineBreak" must be set to either "auto" or "word".'
         );
 
-      if (opts.width.toLocaleLowerCase() !== "auto" && !isNaN(opts.width))
+      if (opts.width !== "auto" && typeof opts.width !== "number")
         throw new TypeError(
           'Property "width" must be set to either "auto" or a number.'
         );
 
-      if (opts.height.toLocaleLowerCase() !== "auto" && !isNaN(opts.height))
+      if (opts.height !== "auto" && typeof opts.width !== "number")
         throw new TypeError(
           'Property "height" must be set to either "auto" or a number.'
         );
